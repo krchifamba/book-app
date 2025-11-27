@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AddBookForm from "./AddBook.jsx";
 
-function BookList() {
-  const [books, setBooks] = useState([
+export default function BookList() {
+  const defaultBooks = [
     { id: 1, title: "Dune", author: "Frank Herbert", read: false },
     { id: 2, title: "1984", author: "George Orwell", read: true },
     { id: 3, title: "The Hobbit", author: "J.R.R. Tolkien", read: false },
@@ -11,7 +11,19 @@ function BookList() {
     { id: 6, title: "The Catcher in the Rye", author: "J.D. Salinger", read: true },
     { id: 7, title: "To Kill a Mockingbird", author: "Harper Lee", read: false },
     { id: 8, title: "The Great Gatsby", author: "F. Scott Fitzgerald", read: true }
-  ]);
+  ];
+
+  const [books, setBooks] = useState(() => {
+    const stored = localStorage.getItem("books");
+    if (!stored) return defaultBooks;
+
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : defaultBooks;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("books", JSON.stringify(books));
+  }, [books]);
 
   const addBook = (book) => {
     setBooks((prev) => [...prev, book]);
@@ -22,7 +34,7 @@ function BookList() {
       prev.map((b) => (b.id === id ? { ...b, read: !b.read } : b))
     );
   };
-  
+
   const deleteBook = (id) => {
     setBooks((prev) => prev.filter((b) => b.id !== id));
   };
@@ -33,39 +45,34 @@ function BookList() {
 
       <AddBookForm onAdd={addBook} />
 
-    <table>
-    <thead>
-        <tr>
-        <th>Title</th>
-        <th>Author</th>
-        <th>Status</th>
-        <th>Actions</th>
-        </tr>
-    </thead>
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
 
-    <tbody>
-        {books.map((b) => (
-        <tr key={b.id}>
-            <td>{b.title}</td>
-            <td>{b.author}</td>
-            <td>{b.read ? "Read" : "Unread"}</td>
+        <tbody>
+          {books.map((b) => (
+            <tr key={b.id}>
+              <td>{b.title}</td>
+              <td>{b.author}</td>
+              <td>{b.read ? "Read" : "Unread"}</td>
 
-            <td>
-            <button onClick={() => toggleRead(b.id)}>
-                {b.read ? "Mark Unread" : "Mark Read"}
-            </button>
+              <td>
+                <button onClick={() => toggleRead(b.id)}>
+                  {b.read ? "Mark Unread" : "Mark Read"}
+                </button>
 
-            <button onClick={() => deleteBook(b.id)}>
-                Delete
-            </button>
-            </td>
-        </tr>
-        ))}
-    </tbody>
-    </table>
-
+                <button onClick={() => deleteBook(b.id)}>Delete</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
-
-export default BookList;
